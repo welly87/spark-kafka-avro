@@ -1,0 +1,11 @@
+{
+  "namespace": "example.avro",
+  "type": "record",
+  "name": "User",
+  "fields": [
+    { "name": "registertime", "type": ["null", "long"] },
+    { "name": "userid", "type": ["null", "string"] },
+    { "name": "region_id","type": [ "null", "string" ] },
+    { "name": "gender","type": [ "null", "string" ] }
+  ]
+}
