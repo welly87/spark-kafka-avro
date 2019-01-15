@@ -18,19 +18,13 @@ case class WebUser(registertime: Long, userId: String, region_id: String, gender
 object App {
 
   def deserialize(message: KafkaMessage): WebUser = {
-    println(message.value.length)
-
-    val userReader = new SpecificDatumReader[User](classOf[User])
-    //Schema.parse(new File("/home/andal/spark-kafka-avro/src/main/resources/user.avsc"))
+    val reader = new SpecificDatumReader[User](User.getClassSchema)
     val decoder = DecoderFactory.get.binaryDecoder(message.value, null)
-    val user = userReader.read(null, decoder)
-    println("user => " + user)
-
+    val user = reader.read(null, decoder)
     return WebUser(user.getRegistertime, user.getUserid.toString, user.getRegionId.toString, user.getGender.toString)
   }
 
   def main(args: Array[String]): Unit = {
-    val schemaRegistryAddr = "http://localhost:8081"
     val servers = "localhost:9092"
 
     val spark = SparkSession
@@ -46,7 +40,7 @@ object App {
       .format("kafka")
       .option("kafka.bootstrap.servers", servers)
       .option("subscribe", "user")
-      .option("startingOffsets", "earliest")
+//      .option("startingOffsets", "earliest")
       .load()
 
 
@@ -55,14 +49,8 @@ object App {
     val ds = df.as[KafkaMessage].filter(x => x.value != null).map(x => deserialize(x))
 
     val query = ds.writeStream
-      //      .outputMode("complete")
       .format("console")
       .start()
-
-//    val query = df.writeStream
-////      .outputMode("complete")
-//      .format("console")
-//      .start()
 
     query.awaitTermination()
   }
